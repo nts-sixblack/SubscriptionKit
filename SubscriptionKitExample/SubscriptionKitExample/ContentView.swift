@@ -7,10 +7,10 @@
 
 import SubscriptionKit
 import SwiftUI
+import SwiftInjected
 
 struct ContentView: View {
-    @ObservedObject var subscriptionManager: SubscriptionManager
-    let subscriptionConfiguration: SubscriptionKitConfiguration
+    @InjectedObservable var subscriptionManager: SubscriptionManager
     @State private var isShowingPaywall = false
 
     var body: some View {
@@ -51,10 +51,7 @@ struct ContentView: View {
             }
             .navigationTitle("SubscriptionKit")
             .sheet(isPresented: $isShowingPaywall) {
-                SubscriptionPaywallView(
-                    manager: subscriptionManager,
-                    configuration: subscriptionConfiguration
-                )
+                SubscriptionPaywallView()
             }
         }
     }
@@ -77,22 +74,26 @@ struct ContentView: View {
     }
 
     private var paywallModeDescription: String {
-        switch subscriptionConfiguration.paywallMode {
+        guard let configuration = subscriptionManager.configuration else {
+            return "Unconfigured"
+        }
+        switch configuration.paywallMode {
         case .revenueCat:
-            "RevenueCat hosted"
+            return "RevenueCat hosted"
         case .custom:
-            "Custom SwiftUI"
+            return "Custom SwiftUI"
         case .scrollTemplateView:
-            "Scroll template SwiftUI"
+            return "Scroll template SwiftUI"
         case .customProvider:
-            "Custom provider SwiftUI"
+            return "Custom provider SwiftUI"
         }
     }
 }
 
 #Preview {
-    ContentView(
-        subscriptionManager: SubscriptionManager(),
-        subscriptionConfiguration: SubscriptionKitConfiguration(publicAPIKey: "preview")
-    )
+    let _ = Dependencies {
+        Dependency { SubscriptionManager() }
+    }.build()
+
+    return ContentView()
 }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "533de208f7207fdd36b99a2f0036707fca012c23defe0e4e99a820106aff336d",
+  "originHash" : "70b5cc3af7bd954f0cb1b1e16a31c0c2dca70c428d51c856bd450865228509e3",
   "pins" : [
     {
       "identity" : "purchases-ios-spm",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "629a56ecef190469914b8f0914bf0446363eb09f",
         "version" : "5.78.0"
+      }
+    },
+    {
+      "identity" : "swiftinjected",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nts-sixblack/SwiftInjected.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "3b82eaff7ba403f6959e6c1cfba3e632d0b44476"
       }
     }
   ],
