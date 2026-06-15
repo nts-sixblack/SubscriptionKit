@@ -5,6 +5,20 @@ All notable changes to SubscriptionKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-15
+
+### Changed
+- Centralized `SubscriptionKitConfiguration` into `SubscriptionManager` state, removing the need to pass it into views.
+- Updated `SubscriptionPaywallView` and its sub-views to use `SwiftInjected` for dependency injection of `SubscriptionManager`.
+- Initializing `SubscriptionPaywallView` no longer requires `manager` or `configuration` parameters.
+
+### Added
+- Integrated `SwiftInjected` package dependency.
+- Added package selection logic in `SubscriptionPaywallContext` and Custom Paywalls.
+
+### Fixed
+- Fixed Swift compiler error "Call to main actor-isolated initializer" when using `.custom(provider:)` convenience initializer in `SubscriptionKitConfig`.
+
 ## [1.0.0] - 2026-06-15
 
 ### Added

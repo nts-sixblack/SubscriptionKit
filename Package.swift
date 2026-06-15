@@ -18,6 +18,10 @@ let package = Package(
         .package(
             url: "https://github.com/RevenueCat/purchases-ios-spm.git",
             from: "5.0.0"
+        ),
+        .package(
+            url: "https://github.com/nts-sixblack/SwiftInjected.git",
+            branch: "main"
         )
     ],
     targets: [
@@ -25,7 +29,8 @@ let package = Package(
             name: "SubscriptionKit",
             dependencies: [
                 .product(name: "RevenueCat", package: "purchases-ios-spm"),
-                .product(name: "RevenueCatUI", package: "purchases-ios-spm")
+                .product(name: "RevenueCatUI", package: "purchases-ios-spm"),
+                .product(name: "SwiftInjected", package: "SwiftInjected")
             ],
             path: "Sources/SubscriptionKit"
         ),

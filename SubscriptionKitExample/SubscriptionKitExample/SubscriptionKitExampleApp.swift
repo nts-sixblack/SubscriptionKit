@@ -11,6 +11,7 @@ import SwiftInjected
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        NSLog("AppDelegate didFinishLaunchingWithOptions CALLED")
         // Configure dependencies
         let dependencies = Dependencies {
             Dependency { SubscriptionManager.shared }
@@ -23,8 +24,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             paywallMode: .custom(provider: LedBoardProPaywallProvider()),
             debugLoggingEnabled: true
         )
+        SubscriptionManager.shared.setConfiguration(subscriptionConfiguration)
+        
         Task {
-            try? await SubscriptionManager.shared.configure(subscriptionConfiguration)
+            NSLog("Task started execution")
+            do {
+                try await SubscriptionManager.shared.configure(subscriptionConfiguration, refreshOnConfigure: true)
+            } catch {
+                NSLog("Configure error: \(error)")
+            }
         }
 
         return true

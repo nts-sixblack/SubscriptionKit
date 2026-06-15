@@ -74,7 +74,7 @@ public final class SubscriptionManager: ObservableObject {
 
     private let adapter: SubscriptionRevenueCatAdapting
     private let userDefaults: UserDefaults
-    private var configuration: SubscriptionKitConfiguration?
+    @Published public private(set) var configuration: SubscriptionKitConfiguration?
     private var streamTask: Task<Void, Never>?
 
     // MARK: - Init
@@ -98,6 +98,10 @@ public final class SubscriptionManager: ObservableObject {
 
     // MARK: - Configuration
 
+    public func setConfiguration(_ configuration: SubscriptionKitConfiguration) {
+        self.configuration = configuration
+    }
+
     /// Configures the SDK and begins listening for entitlement updates.
     ///
     /// Call this once near app launch, typically inside a `.task` modifier on the root view.
@@ -110,8 +114,12 @@ public final class SubscriptionManager: ObservableObject {
         _ configuration: SubscriptionKitConfiguration,
         refreshOnConfigure: Bool = true
     ) async throws {
+        NSLog("SubscriptionManager.configure called with configuration: \(configuration)")
         self.configuration = configuration
         lastError = nil
+        if state == .unknown {
+            state = .loading
+        }
 
         do {
             try adapter.configure(with: configuration)
@@ -140,13 +148,13 @@ public final class SubscriptionManager: ObservableObject {
     /// Errors are silently discarded. Prefer the `async throws` variant in production.
     public func configure(_ configuration: SubscriptionKitConfiguration) {
         Task {
-            try? await configure(configuration)
+            try? await configure(configuration, refreshOnConfigure: true)
         }
     }
 
     // MARK: - Customer Info
 
-    /// Fetches the latest customer info from RevenueCat and updates `state`.
+    /// Fetches fresh customer info and updates the state.
     public func refreshCustomerInfo() async {
         guard configuration != nil else { return }
         if state == .unknown {
@@ -156,7 +164,6 @@ public final class SubscriptionManager: ObservableObject {
         do {
             let customerInfo = try await adapter.customerInfo()
             apply(customerInfo: customerInfo, source: .revenueCat)
-            lastError = nil
         } catch {
             lastError = error
             if state == .loading || state == .unknown {
@@ -278,7 +285,8 @@ public final class SubscriptionManager: ObservableObject {
         state = snapshot.isPremium ? .premiumFromSnapshot : .nonPremium
     }
 
-    private func refreshOfferings() async {
+    /// Fetches the latest offerings and packages from RevenueCat.
+    public func refreshOfferings() async {
         guard let configuration else { return }
 
         do {
@@ -286,9 +294,14 @@ public final class SubscriptionManager: ObservableObject {
                 identifier: configuration.offeringIdentifier,
                 placementIdentifier: configuration.placementIdentifier
             )
+            NSLog("SubscriptionManager: Fetched \(returnedPackages.count) packages from RevenueCat.")
             packages = sort(packages: returnedPackages, order: configuration.productOrder)
             offerings = packages
+            if returnedPackages.isEmpty {
+                NSLog("SubscriptionManager: Packages array is empty. Ensure your products are configured in App Store Connect / StoreKit Configuration file, and the bundle ID matches.")
+            }
         } catch {
+            NSLog("SubscriptionManager: Error fetching offerings: \(error)")
             lastError = error
         }
     }

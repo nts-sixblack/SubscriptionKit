@@ -11,7 +11,7 @@ import SwiftInjected
 
 struct ContentView: View {
     @InjectedObservable var subscriptionManager: SubscriptionManager
-    @State private var isShowingPaywall = false
+    @State private var isShowingPaywall = true
 
     var body: some View {
         NavigationStack {
@@ -47,6 +47,13 @@ struct ContentView: View {
 
                 Section("Paywall Mode") {
                     Text(paywallModeDescription)
+                }
+
+                Section("Debug") {
+                    Button("Print Manager Address") {
+                        NSLog("Manager: \(Unmanaged.passUnretained(subscriptionManager).toOpaque())")
+                        NSLog("Shared: \(Unmanaged.passUnretained(SubscriptionManager.shared).toOpaque())")
+                    }
                 }
             }
             .navigationTitle("SubscriptionKit")

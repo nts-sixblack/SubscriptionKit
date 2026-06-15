@@ -62,24 +62,40 @@ targets: [
 ```swift
 import SubscriptionKit
 import SwiftUI
+import SwiftInjected
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // 1. Configure dependencies
+        let dependencies = Dependencies {
+            Dependency { SubscriptionManager.shared }
+        }
+        dependencies.build()
+
+        // 2. Setup Configuration
+        let config = SubscriptionKitConfiguration(
+            publicAPIKey: "appl_your_revenuecat_ios_key",
+            entitlementID: "premium",
+            paywallMode: .custom
+        )
+        SubscriptionManager.shared.setConfiguration(config)
+        
+        // 3. Start configuring RevenueCat
+        Task {
+            try? await SubscriptionManager.shared.configure(config)
+        }
+
+        return true
+    }
+}
 
 @main
 struct MyApp: App {
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
-
-    private let subscriptionConfig = SubscriptionKitConfiguration(
-        publicAPIKey: "appl_your_revenuecat_ios_key",
-        entitlementID: "premium",
-        paywallMode: .custom
-    )
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(subscriptionManager)
-                .task {
-                    try? await subscriptionManager.configure(subscriptionConfig)
-                }
         }
     }
 }
@@ -89,7 +105,7 @@ struct MyApp: App {
 
 ```swift
 struct ContentView: View {
-    @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @InjectedObservable var subscriptionManager: SubscriptionManager
 
     var body: some View {
         if subscriptionManager.isPremium {
@@ -105,23 +121,14 @@ struct ContentView: View {
 
 ```swift
 struct LockedFeatureView: View {
-    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var isShowingPaywall = false
-
-    private let config = SubscriptionKitConfiguration(
-        publicAPIKey: "appl_your_revenuecat_ios_key",
-        entitlementID: "premium"
-    )
 
     var body: some View {
         Button("Unlock Premium") {
             isShowingPaywall = true
         }
         .sheet(isPresented: $isShowingPaywall) {
-            SubscriptionPaywallView(
-                manager: subscriptionManager,
-                configuration: config
-            )
+            SubscriptionPaywallView()
         }
     }
 }

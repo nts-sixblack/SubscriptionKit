@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import SwiftInjected
 
 // MARK: - SubscriptionKitConfiguration
 
@@ -471,7 +472,9 @@ public struct SubscriptionPaywallTheme: Equatable {
 @MainActor
 public final class SubscriptionPaywallContext: ObservableObject {
     /// The full kit configuration.
-    public let configuration: SubscriptionKitConfiguration
+    public var configuration: SubscriptionKitConfiguration? {
+        manager.configuration
+    }
 
     /// Packages loaded from RevenueCat, sorted by `productOrder`.
     @Published public private(set) var packages: [SubscriptionPackage] = []
@@ -490,17 +493,13 @@ public final class SubscriptionPaywallContext: ObservableObject {
     /// `true` when state is `.premium` or `.premiumFromSnapshot`.
     public var isPremium: Bool { manager.isPremium }
 
-    private let manager: SubscriptionManager
+    @Injected private var manager: SubscriptionManager
     private let dismissAction: () -> Void
     private var cancellables: Set<AnyCancellable> = []
 
     public init(
-        manager: SubscriptionManager,
-        configuration: SubscriptionKitConfiguration,
         dismiss: @escaping () -> Void
     ) {
-        self.manager = manager
-        self.configuration = configuration
         self.dismissAction = dismiss
 
         manager.$packages

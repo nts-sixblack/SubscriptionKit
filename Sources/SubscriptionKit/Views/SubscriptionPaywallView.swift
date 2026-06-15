@@ -1,5 +1,6 @@
 import RevenueCatUI
 import SwiftUI
+import SwiftInjected
 
 // MARK: - SubscriptionPaywallView
 
@@ -19,44 +20,38 @@ import SwiftUI
 /// }
 /// ```
 public struct SubscriptionPaywallView: View {
-    @ObservedObject var manager: SubscriptionManager
-    let configuration: SubscriptionKitConfiguration
+    @InjectedObservable var manager: SubscriptionManager
     @Environment(\.dismiss) private var dismiss
-
-    public init(manager: SubscriptionManager, configuration: SubscriptionKitConfiguration) {
-        self.manager = manager
-        self.configuration = configuration
-    }
+    
+    public init() {}
 
     public var body: some View {
+        let _ = NSLog("SubscriptionPaywallView body evaluated. configuration is: \(String(describing: manager.configuration))")
+        let _ = NSLog("Manager instance: \(Unmanaged.passUnretained(manager).toOpaque()) vs shared: \(Unmanaged.passUnretained(SubscriptionManager.shared).toOpaque())")
         Group {
-            switch configuration.paywallMode {
-            case .revenueCat:
-                RevenueCatHostedPaywallView(
-                    manager: manager,
-                    configuration: configuration,
-                    dismiss: dismiss
-                )
-            case .custom:
-                CustomSubscriptionPaywallView(
-                    manager: manager,
-                    configuration: configuration,
-                    dismiss: dismiss
-                )
-            case .scrollTemplateView(let content):
-                ScrollTemplateSubscriptionPaywallView(
-                    manager: manager,
-                    configuration: configuration,
-                    content: content,
-                    dismiss: dismiss
-                )
-            case .customProvider(let provider):
-                CustomProviderPaywallView(
-                    manager: manager,
-                    configuration: configuration,
-                    provider: provider,
-                    dismiss: dismiss
-                )
+            if let configuration = manager.configuration {
+                switch configuration.paywallMode {
+                case .revenueCat:
+                    RevenueCatHostedPaywallView(
+                        dismiss: dismiss
+                    )
+                case .custom:
+                    CustomSubscriptionPaywallView(
+                        dismiss: dismiss
+                    )
+                case .scrollTemplateView(let content):
+                    ScrollTemplateSubscriptionPaywallView(
+                        content: content,
+                        dismiss: dismiss
+                    )
+                case .customProvider(let provider):
+                    CustomProviderPaywallView(
+                        provider: provider,
+                        dismiss: dismiss
+                    )
+                }
+            } else {
+                Text("Subscription Manager is not configured.")
             }
         }
     }
@@ -65,13 +60,13 @@ public struct SubscriptionPaywallView: View {
 // MARK: - RevenueCatHostedPaywallView
 
 private struct RevenueCatHostedPaywallView: View {
-    @ObservedObject var manager: SubscriptionManager
-    let configuration: SubscriptionKitConfiguration
+    @InjectedObservable var manager: SubscriptionManager
     let dismiss: DismissAction
 
     var body: some View {
-        PaywallView(displayCloseButton: configuration.showsCloseButton)
-            .onPurchaseCompleted { _ in
+        if let configuration = manager.configuration {
+            PaywallView(displayCloseButton: configuration.showsCloseButton)
+                .onPurchaseCompleted { _ in
                 Task {
                     await manager.refreshCustomerInfo()
                     dismiss()
@@ -86,14 +81,14 @@ private struct RevenueCatHostedPaywallView: View {
             .onRequestedDismissal {
                 dismiss()
             }
+        }
     }
 }
 
 // MARK: - CustomSubscriptionPaywallView
 
 private struct CustomSubscriptionPaywallView: View {
-    @ObservedObject var manager: SubscriptionManager
-    let configuration: SubscriptionKitConfiguration
+    @InjectedObservable var manager: SubscriptionManager
     let dismiss: DismissAction
     @State private var selectedPackageID: SubscriptionPackage.ID?
 
@@ -102,39 +97,41 @@ private struct CustomSubscriptionPaywallView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    header
-                    benefits
-                    packageList
-                    actionArea
-                    legalLinks
+        if let configuration = manager.configuration {
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        header(configuration)
+                        benefits(configuration)
+                        packageList(configuration)
+                        actionArea(configuration)
+                        legalLinks(configuration)
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .background(configuration.theme.backgroundColor)
-            .foregroundStyle(configuration.theme.foregroundColor)
-            .navigationTitle("Premium")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if configuration.showsCloseButton {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Close", action: dismiss.callAsFunction)
-                            .accessibilityLabel("Close paywall")
+                .background(configuration.theme.backgroundColor)
+                .foregroundStyle(configuration.theme.foregroundColor)
+                .navigationTitle("Premium")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if configuration.showsCloseButton {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Close", action: dismiss.callAsFunction)
+                                .accessibilityLabel("Close paywall")
+                        }
                     }
                 }
             }
-        }
-        .onAppear {
-            if selectedPackageID == nil {
-                selectedPackageID = manager.packages.first?.id
+            .onAppear {
+                if selectedPackageID == nil {
+                    selectedPackageID = manager.packages.first?.id
+                }
             }
         }
     }
 
-    private var header: some View {
+    private func header(_ configuration: SubscriptionKitConfiguration) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(configuration.customPaywall.title)
                 .font(.largeTitle.bold())
@@ -146,7 +143,7 @@ private struct CustomSubscriptionPaywallView: View {
         }
     }
 
-    private var benefits: some View {
+    private func benefits(_ configuration: SubscriptionKitConfiguration) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(configuration.customPaywall.benefits, id: \.self) { benefit in
                 Label(benefit, systemImage: "checkmark.circle.fill")
@@ -159,7 +156,7 @@ private struct CustomSubscriptionPaywallView: View {
     }
 
     @ViewBuilder
-    private var packageList: some View {
+    private func packageList(_ configuration: SubscriptionKitConfiguration) -> some View {
         if manager.packages.isEmpty {
             VStack(spacing: 8) {
                 Image(systemName: "cart.badge.questionmark")
@@ -224,7 +221,7 @@ private struct CustomSubscriptionPaywallView: View {
         }
     }
 
-    private var actionArea: some View {
+    private func actionArea(_ configuration: SubscriptionKitConfiguration) -> some View {
         VStack(spacing: 12) {
             Button {
                 guard let selectedPackage else { return }
@@ -281,7 +278,7 @@ private struct CustomSubscriptionPaywallView: View {
         }
     }
 
-    private var legalLinks: some View {
+    private func legalLinks(_ configuration: SubscriptionKitConfiguration) -> some View {
         HStack(spacing: 16) {
             ForEach(configuration.customPaywall.legalLinks) { link in
                 Link(link.title, destination: link.url)
@@ -305,8 +302,7 @@ private struct CustomSubscriptionPaywallView: View {
 // MARK: - CustomProviderPaywallView
 
 private struct CustomProviderPaywallView: View {
-    @ObservedObject var manager: SubscriptionManager
-    let configuration: SubscriptionKitConfiguration
+    @InjectedObservable var manager: SubscriptionManager
     let provider: AnySubscriptionCustomPaywallProvider
     let dismiss: DismissAction
 
@@ -315,18 +311,12 @@ private struct CustomProviderPaywallView: View {
     @StateObject private var context: SubscriptionPaywallContext
 
     init(
-        manager: SubscriptionManager,
-        configuration: SubscriptionKitConfiguration,
         provider: AnySubscriptionCustomPaywallProvider,
         dismiss: DismissAction
     ) {
-        self.manager = manager
-        self.configuration = configuration
         self.provider = provider
         self.dismiss = dismiss
         _context = StateObject(wrappedValue: SubscriptionPaywallContext(
-            manager: manager,
-            configuration: configuration,
             dismiss: dismiss.callAsFunction
         ))
     }

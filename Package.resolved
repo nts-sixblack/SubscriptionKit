@@ -8,6 +8,15 @@
         "revision" : "629a56ecef190469914b8f0914bf0446363eb09f",
         "version" : "5.78.0"
       }
+    },
+    {
+      "identity" : "swiftinjected",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nts-sixblack/SwiftInjected.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "3b82eaff7ba403f6959e6c1cfba3e632d0b44476"
+      }
     }
   ],
   "version" : 2

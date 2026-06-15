@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SwiftInjected
 
 // MARK: - ScrollTemplateSubscriptionPaywallView
 
@@ -53,20 +54,15 @@ import SwiftUI
 /// )
 /// ```
 public struct ScrollTemplateSubscriptionPaywallView: View {
-    @ObservedObject var manager: SubscriptionManager
-    let configuration: SubscriptionKitConfiguration
+    @InjectedObservable var manager: SubscriptionManager
     let content: SubscriptionScrollTemplatePaywallContent
     let dismiss: DismissAction
     @State private var selectedPackageID: SubscriptionPackage.ID?
 
     public init(
-        manager: SubscriptionManager,
-        configuration: SubscriptionKitConfiguration,
         content: SubscriptionScrollTemplatePaywallContent,
         dismiss: DismissAction
     ) {
-        self.manager = manager
-        self.configuration = configuration
         self.content = content
         self.dismiss = dismiss
     }
@@ -146,7 +142,7 @@ public struct ScrollTemplateSubscriptionPaywallView: View {
 
             Spacer()
 
-            if configuration.showsCloseButton {
+            if manager.configuration?.showsCloseButton == true {
                 Button(action: dismiss.callAsFunction) {
                     Text(content.skipButtonTitle)
                         .font(.subheadline.weight(.semibold))
@@ -453,9 +449,9 @@ public struct ScrollTemplateSubscriptionPaywallView: View {
             .opacity(selectedPackage == nil ? 0.55 : 1)
             .accessibilityLabel(content.purchaseButtonTitle)
 
-            if configuration.showsRestoreButton || !content.legalLinks.isEmpty {
+            if manager.configuration?.showsRestoreButton == true || !content.legalLinks.isEmpty {
                 HStack(spacing: 14) {
-                    if configuration.showsRestoreButton {
+                    if manager.configuration?.showsRestoreButton == true {
                         Button {
                             Task {
                                 await manager.restorePurchases()
