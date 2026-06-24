@@ -21,7 +21,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/nts-sixblack/SwiftInjected.git",
-            branch: "main"
+            from: "1.0.0"
         )
     ],
     targets: [
