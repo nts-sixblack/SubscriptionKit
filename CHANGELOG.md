@@ -5,6 +5,15 @@ All notable changes to SubscriptionKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-06-24
+
+### Added
+- Added support for a custom `onDismiss` callback in `SubscriptionPaywallView` initializer to customize dismiss/close actions dynamically.
+- Added unit tests verifying `SubscriptionPaywallView` initialization with `onDismiss`.
+
+### Fixed
+- Fixed compilation error in `SubscriptionManagerTests` related to non-existent `UserDefaults.suiteName`.
+
 ## [1.1.1] - 2026-06-24
 
 ### Changed

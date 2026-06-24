@@ -23,7 +23,19 @@ public struct SubscriptionPaywallView: View {
     @InjectedObservable var manager: SubscriptionManager
     @Environment(\.dismiss) private var dismiss
     
-    public init() {}
+    private let onDismiss: (() -> Void)?
+
+    public init(onDismiss: (() -> Void)? = nil) {
+        self.onDismiss = onDismiss
+    }
+
+    private func performDismiss() {
+        if let onDismiss {
+            onDismiss()
+        } else {
+            dismiss()
+        }
+    }
 
     public var body: some View {
         let _ = NSLog("SubscriptionPaywallView body evaluated. configuration is: \(String(describing: manager.configuration))")
@@ -33,21 +45,21 @@ public struct SubscriptionPaywallView: View {
                 switch configuration.paywallMode {
                 case .revenueCat:
                     RevenueCatHostedPaywallView(
-                        dismiss: dismiss
+                        dismiss: performDismiss
                     )
                 case .custom:
                     CustomSubscriptionPaywallView(
-                        dismiss: dismiss
+                        dismiss: performDismiss
                     )
                 case .scrollTemplateView(let content):
                     ScrollTemplateSubscriptionPaywallView(
                         content: content,
-                        dismiss: dismiss
+                        dismiss: performDismiss
                     )
                 case .customProvider(let provider):
                     CustomProviderPaywallView(
                         provider: provider,
-                        dismiss: dismiss
+                        dismiss: performDismiss
                     )
                 }
             } else {
@@ -61,7 +73,7 @@ public struct SubscriptionPaywallView: View {
 
 private struct RevenueCatHostedPaywallView: View {
     @InjectedObservable var manager: SubscriptionManager
-    let dismiss: DismissAction
+    let dismiss: () -> Void
 
     var body: some View {
         if let configuration = manager.configuration {
@@ -89,7 +101,7 @@ private struct RevenueCatHostedPaywallView: View {
 
 private struct CustomSubscriptionPaywallView: View {
     @InjectedObservable var manager: SubscriptionManager
-    let dismiss: DismissAction
+    let dismiss: () -> Void
     @State private var selectedPackageID: SubscriptionPackage.ID?
 
     private var selectedPackage: SubscriptionPackage? {
@@ -117,7 +129,7 @@ private struct CustomSubscriptionPaywallView: View {
                 .toolbar {
                     if configuration.showsCloseButton {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button("Close", action: dismiss.callAsFunction)
+                            Button("Close", action: dismiss)
                                 .accessibilityLabel("Close paywall")
                         }
                     }
@@ -304,7 +316,7 @@ private struct CustomSubscriptionPaywallView: View {
 private struct CustomProviderPaywallView: View {
     @InjectedObservable var manager: SubscriptionManager
     let provider: AnySubscriptionCustomPaywallProvider
-    let dismiss: DismissAction
+    let dismiss: () -> Void
 
     /// Keep the context alive for the lifetime of the sheet so Combine
     /// subscriptions remain active while the paywall is on screen.
@@ -312,12 +324,12 @@ private struct CustomProviderPaywallView: View {
 
     init(
         provider: AnySubscriptionCustomPaywallProvider,
-        dismiss: DismissAction
+        dismiss: @escaping () -> Void
     ) {
         self.provider = provider
         self.dismiss = dismiss
         _context = StateObject(wrappedValue: SubscriptionPaywallContext(
-            dismiss: dismiss.callAsFunction
+            dismiss: dismiss
         ))
     }
 

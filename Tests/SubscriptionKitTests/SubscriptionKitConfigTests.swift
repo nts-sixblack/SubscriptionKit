@@ -1,4 +1,5 @@
 import XCTest
+import SwiftInjected
 @testable import SubscriptionKit
 
 final class SubscriptionKitConfigTests: XCTestCase {
@@ -61,5 +62,18 @@ final class SubscriptionKitConfigTests: XCTestCase {
     func test_validationError_localizedDescription() {
         let error = SubscriptionKitConfiguration.ValidationError.missingPublicAPIKey
         XCTAssertFalse(error.errorDescription?.isEmpty ?? true)
+    }
+
+    @MainActor
+    func test_subscriptionPaywallView_init_withOnDismiss() {
+        let _ = Dependencies {
+            Dependency { SubscriptionManager() }
+        }.build()
+
+        var called = false
+        let view = SubscriptionPaywallView(onDismiss: {
+            called = true
+        })
+        XCTAssertNotNil(view)
     }
 }

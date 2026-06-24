@@ -93,18 +93,20 @@ final class SubscriptionManagerTests: XCTestCase {
 
     var adapter: MockRevenueCatAdapter!
     var userDefaults: UserDefaults!
+    var suiteName: String!
     var manager: SubscriptionManager!
     let snapshotKey = "SubscriptionKit.Test.Snapshot"
 
     override func setUp() {
         super.setUp()
         adapter = MockRevenueCatAdapter()
-        userDefaults = UserDefaults(suiteName: "SubscriptionManagerTests-\(UUID().uuidString)")!
+        suiteName = "SubscriptionManagerTests-\(UUID().uuidString)"
+        userDefaults = UserDefaults(suiteName: suiteName)!
         manager = SubscriptionManager(adapter: adapter, userDefaults: userDefaults)
     }
 
     override func tearDown() {
-        userDefaults.removePersistentDomain(forName: userDefaults.suiteName!)
+        userDefaults.removePersistentDomain(forName: suiteName)
         super.tearDown()
     }
 

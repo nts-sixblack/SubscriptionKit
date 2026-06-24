@@ -128,7 +128,11 @@ struct LockedFeatureView: View {
             isShowingPaywall = true
         }
         .sheet(isPresented: $isShowingPaywall) {
-            SubscriptionPaywallView()
+            // Can be initialized without arguments to use standard SwiftUI dismiss,
+            // or with a custom close/dismiss handler:
+            SubscriptionPaywallView {
+                print("Paywall dismissed")
+            }
         }
     }
 }

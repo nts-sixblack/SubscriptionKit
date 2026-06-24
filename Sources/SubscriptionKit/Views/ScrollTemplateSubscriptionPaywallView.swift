@@ -56,12 +56,12 @@ import SwiftInjected
 public struct ScrollTemplateSubscriptionPaywallView: View {
     @InjectedObservable var manager: SubscriptionManager
     let content: SubscriptionScrollTemplatePaywallContent
-    let dismiss: DismissAction
+    let dismiss: () -> Void
     @State private var selectedPackageID: SubscriptionPackage.ID?
 
     public init(
         content: SubscriptionScrollTemplatePaywallContent,
-        dismiss: DismissAction
+        dismiss: @escaping () -> Void
     ) {
         self.content = content
         self.dismiss = dismiss
@@ -143,7 +143,7 @@ public struct ScrollTemplateSubscriptionPaywallView: View {
             Spacer()
 
             if manager.configuration?.showsCloseButton == true {
-                Button(action: dismiss.callAsFunction) {
+                Button(action: dismiss) {
                     Text(content.skipButtonTitle)
                         .font(.subheadline.weight(.semibold))
                         .padding(.horizontal, 12)

@@ -341,10 +341,10 @@ Show paywall:
 
 ```swift
 .sheet(isPresented: $isShowingPaywall) {
-    SubscriptionPaywallView(
-        manager: subscriptionManager,
-        configuration: subscriptionConfiguration
-    )
+    // Can be initialized without arguments, or with a custom onDismiss callback:
+    SubscriptionPaywallView {
+        print("Paywall dismissed")
+    }
 }
 ```
 
