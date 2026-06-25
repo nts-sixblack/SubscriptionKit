@@ -89,6 +89,13 @@ public struct SubscriptionKitConfiguration {
     /// types are sorted after all configured types.
     public var productOrder: [SubscriptionProductType]
 
+    /// Product type pre-selected when the paywall opens.
+    ///
+    /// Matched against ``SubscriptionPackage/productType`` in the displayed
+    /// package list. If `nil`, or if no matching package is found, the first
+    /// displayed package (after ``productOrder`` sorting) is selected.
+    public var defaultSelectedProduct: SubscriptionProductType?
+
     /// Text and links for the built-in custom SwiftUI paywall.
     public var customPaywall: SubscriptionCustomPaywallContent
 
@@ -119,6 +126,7 @@ public struct SubscriptionKitConfiguration {
         offeringIdentifier: String? = nil,
         placementIdentifier: String? = nil,
         productOrder: [SubscriptionProductType] = [.lifetime, .yearly, .monthly, .weekly],
+        defaultSelectedProduct: SubscriptionProductType? = nil,
         customPaywall: SubscriptionCustomPaywallContent = .default,
         showsCloseButton: Bool = true,
         showsRestoreButton: Bool = true,
@@ -133,6 +141,7 @@ public struct SubscriptionKitConfiguration {
         self.offeringIdentifier = offeringIdentifier
         self.placementIdentifier = placementIdentifier
         self.productOrder = productOrder
+        self.defaultSelectedProduct = defaultSelectedProduct
         self.customPaywall = customPaywall
         self.showsCloseButton = showsCloseButton
         self.showsRestoreButton = showsRestoreButton
@@ -148,6 +157,15 @@ public struct SubscriptionKitConfiguration {
         guard !publicAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw ValidationError.missingPublicAPIKey
         }
+    }
+
+    /// Resolves the package that should be selected by default in built-in paywalls.
+    public func resolvedDefaultPackage(from packages: [SubscriptionPackage]) -> SubscriptionPackage? {
+        if let defaultSelectedProduct,
+           let match = packages.first(where: { $0.productType == defaultSelectedProduct }) {
+            return match
+        }
+        return packages.first
     }
 }
 
@@ -506,7 +524,7 @@ public final class SubscriptionPaywallContext: ObservableObject {
             .sink { [weak self] newPackages in
                 self?.packages = newPackages
                 if self?.selectedPackage == nil || !newPackages.contains(where: { $0.id == self?.selectedPackage?.id }) {
-                    self?.selectedPackage = newPackages.first
+                    self?.selectedPackage = self?.configuration?.resolvedDefaultPackage(from: newPackages)
                 }
             }
             .store(in: &cancellables)

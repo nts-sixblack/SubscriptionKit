@@ -153,6 +153,7 @@ All configuration lives in `SubscriptionKitConfiguration`.
 | `offeringIdentifier` | `String?` | `nil` | RevenueCat offering ID. If `nil`, falls back to `placementIdentifier` then current offering. |
 | `placementIdentifier` | `String?` | `nil` | RevenueCat targeting placement ID. Used only when `offeringIdentifier` is `nil`. |
 | `productOrder` | `[SubscriptionProductType]` | `[.lifetime, .yearly, .monthly, .weekly]` | Sort order for packages in built-in paywalls. |
+| `defaultSelectedProduct` | `SubscriptionProductType?` | `nil` | Product type pre-selected when the paywall opens. Matched against displayed packages. Falls back to the first displayed package when `nil` or when no match is found. |
 | `customPaywall` | `SubscriptionCustomPaywallContent` | `.default` | Copy for the built-in custom SwiftUI paywall. |
 | `showsCloseButton` | `Bool` | `true` | Shows a close/skip button in the paywall. |
 | `showsRestoreButton` | `Bool` | `true` | Shows a restore purchases button in built-in paywalls. |
@@ -331,6 +332,8 @@ SubscriptionKitConfiguration(
 | `isPurchasing` | `Bool` | `true` while a purchase is in progress. |
 | `isRestoring` | `Bool` | `true` while a restore is in progress. |
 | `lastError` | `Error?` | Last purchase or restore error. |
+| `selectedPackage` | `SubscriptionPackage?` | Package pre-selected per `defaultSelectedProduct`, or the first displayed package when unset. |
+| `selectPackage(_:)` | method | Updates the selected package in custom provider paywalls. |
 | `purchase(_:)` | `async` method | Purchases the given package and auto-dismisses when premium is unlocked. |
 | `restorePurchases()` | `async` method | Restores purchases and auto-dismisses when premium is unlocked. |
 | `dismiss()` | method | Dismisses the paywall immediately. |
@@ -658,6 +661,7 @@ xcodebuild test \
 The test suite covers:
 
 - `SubscriptionKitConfiguration` validation and defaults
+- `resolvedDefaultPackage(from:)` default package selection
 - `SubscriptionManager` state transitions using `MockRevenueCatAdapter`
 - Package ordering by `productOrder`
 - Premium snapshot persistence and fallback

@@ -5,6 +5,17 @@ All notable changes to SubscriptionKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-06-25
+
+### Added
+- Added `defaultSelectedProduct` to `SubscriptionKitConfiguration` to pre-select a package by `SubscriptionProductType` in built-in paywalls and `SubscriptionPaywallContext`.
+- Added `resolvedDefaultPackage(from:)` helper to resolve the initial selected package from the displayed package list.
+- Added unit tests for default package selection resolution.
+
+### Changed
+- Custom and scroll-template paywalls now respect `defaultSelectedProduct` when setting the initial selection.
+- Custom paywall observes package list changes so default selection applies when offerings load asynchronously.
+
 ## [1.1.2] - 2026-06-24
 
 ### Added

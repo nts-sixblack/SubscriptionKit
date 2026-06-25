@@ -135,12 +135,17 @@ private struct CustomSubscriptionPaywallView: View {
                     }
                 }
             }
-            .onAppear {
-                if selectedPackageID == nil {
-                    selectedPackageID = manager.packages.first?.id
-                }
+            .onAppear(perform: selectInitialPackageIfNeeded)
+            .onChange(of: manager.packages) { _ in
+                selectInitialPackageIfNeeded()
             }
         }
+    }
+
+    private func selectInitialPackageIfNeeded() {
+        guard let configuration = manager.configuration else { return }
+        guard selectedPackageID == nil || !manager.packages.contains(where: { $0.id == selectedPackageID }) else { return }
+        selectedPackageID = configuration.resolvedDefaultPackage(from: manager.packages)?.id
     }
 
     private func header(_ configuration: SubscriptionKitConfiguration) -> some View {

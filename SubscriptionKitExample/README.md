@@ -113,6 +113,7 @@ All configuration lives in `SubscriptionKitConfiguration`.
 | `offeringIdentifier` | `String?` | `nil` | Optional RevenueCat offering ID. If provided, packages are loaded from `offerings.offering(identifier:)`. |
 | `placementIdentifier` | `String?` | `nil` | Optional RevenueCat targeting placement ID. Used only when `offeringIdentifier` is nil. |
 | `productOrder` | `[SubscriptionProductType]` | `[.lifetime, .yearly, .monthly, .weekly]` | Sort order for packages in the custom paywall. Unknown/custom package types are sorted after configured types. |
+| `defaultSelectedProduct` | `SubscriptionProductType?` | `nil` | Product type pre-selected when the paywall opens. Matched against displayed packages. Falls back to the first displayed package when `nil` or when no match is found. |
 | `customPaywall` | `SubscriptionCustomPaywallContent` | `.default` | Text, benefits, button labels, empty state copy, and legal links for the custom paywall. |
 | `showsCloseButton` | `Bool` | `true` | Shows a close button in the custom paywall and passes `displayCloseButton` to RevenueCat hosted paywall. |
 | `showsRestoreButton` | `Bool` | `true` | Shows the restore button in the custom SwiftUI paywall. |
@@ -245,6 +246,8 @@ let config = SubscriptionKitConfiguration(
 | `isPurchasing` | `Bool` | `true` while a purchase is in progress. |
 | `isRestoring` | `Bool` | `true` while a restore is in progress. |
 | `lastError` | `Error?` | Last purchase or restore error, if any. |
+| `selectedPackage` | `SubscriptionPackage?` | Package pre-selected per `defaultSelectedProduct`, or the first displayed package when unset. |
+| `selectPackage(_:)` | Method | Updates the selected package in custom provider paywalls. |
 | `purchase(_:) async` | Method | Purchases the given package and auto-dismisses when premium is unlocked. |
 | `restorePurchases() async` | Method | Restores purchases and auto-dismisses when premium is unlocked. |
 | `dismiss()` | Method | Dismisses the paywall immediately. |
@@ -671,6 +674,7 @@ xcodebuild test -project SubscriptionKitExample.xcodeproj -scheme SubscriptionKi
 Existing tests cover:
 
 - Configuration validation and defaults.
+- Default package selection via `resolvedDefaultPackage(from:)`.
 - Subscription manager state transitions.
 - Package ordering.
 - Premium snapshot fallback.

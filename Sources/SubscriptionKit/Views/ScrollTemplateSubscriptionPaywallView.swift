@@ -496,7 +496,7 @@ public struct ScrollTemplateSubscriptionPaywallView: View {
 
     private func selectInitialPackageIfNeeded() {
         guard selectedPackageID == nil || !manager.packages.contains(where: { $0.id == selectedPackageID }) else { return }
-        selectedPackageID = manager.packages.first?.id
+        selectedPackageID = manager.configuration?.resolvedDefaultPackage(from: manager.packages)?.id
     }
 
     private func planOverride(for package: SubscriptionPackage) -> SubscriptionScrollTemplatePaywallContent.PlanOverride? {

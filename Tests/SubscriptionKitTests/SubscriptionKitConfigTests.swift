@@ -57,6 +57,54 @@ final class SubscriptionKitConfigTests: XCTestCase {
         XCTAssertEqual(config.snapshotStorageKey, "SubscriptionKit.PremiumSnapshot")
     }
 
+    func test_defaults_defaultSelectedProductIsNil() {
+        let config = SubscriptionKitConfiguration(publicAPIKey: "key")
+        XCTAssertNil(config.defaultSelectedProduct)
+    }
+
+    // MARK: - resolvedDefaultPackage
+
+    func test_resolvedDefaultPackage_returnsFirstWhenDefaultIsNil() {
+        let config = SubscriptionKitConfiguration(publicAPIKey: "key")
+        let packages = [
+            makePackage(id: "lifetime", type: .lifetime),
+            makePackage(id: "yearly", type: .yearly)
+        ]
+
+        XCTAssertEqual(config.resolvedDefaultPackage(from: packages)?.id, "lifetime")
+    }
+
+    func test_resolvedDefaultPackage_selectsMatchingProductType() {
+        let config = SubscriptionKitConfiguration(
+            publicAPIKey: "key",
+            defaultSelectedProduct: .yearly
+        )
+        let packages = [
+            makePackage(id: "lifetime", type: .lifetime),
+            makePackage(id: "yearly", type: .yearly)
+        ]
+
+        XCTAssertEqual(config.resolvedDefaultPackage(from: packages)?.id, "yearly")
+    }
+
+    func test_resolvedDefaultPackage_fallsBackToFirstWhenTypeNotFound() {
+        let config = SubscriptionKitConfiguration(
+            publicAPIKey: "key",
+            defaultSelectedProduct: .weekly
+        )
+        let packages = [
+            makePackage(id: "lifetime", type: .lifetime),
+            makePackage(id: "yearly", type: .yearly)
+        ]
+
+        XCTAssertEqual(config.resolvedDefaultPackage(from: packages)?.id, "lifetime")
+    }
+
+    func test_resolvedDefaultPackage_returnsNilForEmptyPackages() {
+        let config = SubscriptionKitConfiguration(publicAPIKey: "key")
+        XCTAssertNil(config.resolvedDefaultPackage(from: []))
+    }
+
     // MARK: - ValidationError localized description
 
     func test_validationError_localizedDescription() {
@@ -75,5 +123,17 @@ final class SubscriptionKitConfigTests: XCTestCase {
             called = true
         })
         XCTAssertNotNil(view)
+    }
+
+    private func makePackage(id: String, type: SubscriptionProductType) -> SubscriptionPackage {
+        SubscriptionPackage(
+            id: id,
+            productIdentifier: "com.test.\(id)",
+            productType: type,
+            title: id.capitalized,
+            localizedDescription: "\(id.capitalized) plan",
+            localizedPrice: "$4.99",
+            periodDescription: nil
+        )
     }
 }
